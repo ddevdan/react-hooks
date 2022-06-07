@@ -14,14 +14,13 @@ function Greeting({initialName = ''}) {
   // The callback should set the `name` in localStorage.
   // 💰 window.localStorage.setItem('name', name)
 
-  // React.useEffect(() => {
-  //   setName(window.localStorage.getItem('initialName') || initialName)
-  // }, [])
+  React.useEffect(() => {
+    window.localStorage.setItem('initialName', name)
+  }, [name])
 
   function handleChange(event) {
     const {value} = event.target
     setName(value)
-    window.localStorage.setItem('initialName', value)
   }
   return (
     <div>
