@@ -3,20 +3,40 @@
 
 import * as React from 'react'
 
-function Board() {
-  // 🐨 squares is the state for this component. Add useState for squares
+const useLocalStorageState = () => {
   const squaresInitialState = () => Array(9).fill(null)
-
   const initalState = () => {
     const storageValue = window.localStorage.getItem('squaresInitialState')
     const isUndefined = storageValue === 'undefined'
     return (!isUndefined && JSON.parse(storageValue)) || squaresInitialState()
   }
-  const [squares, setSquares] = React.useState(initalState)
 
+  const resetSquares = () => {
+    setSquares(squaresInitialState)
+  }
+
+  const [squares, setSquares] = React.useState(initalState)
   const winner = calculateWinner(squares)
   const nextValue = calculateNextValue(squares)
   const status = calculateStatus(winner, squares, nextValue)
+
+  const preserveState = squaresState => {
+    window.localStorage.setItem(
+      'squaresInitialState',
+      JSON.stringify(squaresState),
+    )
+  }
+
+  React.useEffect(() => {
+    preserveState(squares)
+  }, [squares])
+
+  return {squares, setSquares, resetSquares, winner, nextValue, status}
+}
+function Board() {
+  // 🐨 squares is the state for this component. Add useState for squares
+  const {squares, setSquares, resetSquares, winner, nextValue, status} =
+    useLocalStorageState()
 
   // 🐨 We'll need the following bits of derived state:
   // - nextValue ('X' or 'O')
@@ -27,12 +47,6 @@ function Board() {
 
   // This is the function your square click handler will call. `square` should
   // be an index. So if they click the center square, this will be `4`.
-  function preserveState(squaresState) {
-    window.localStorage.setItem(
-      'squaresInitialState',
-      JSON.stringify(squaresState),
-    )
-  }
 
   function selectSquare(square) {
     const wasSelected = squares[square]
@@ -48,7 +62,6 @@ function Board() {
     const squaresCopy = [...squares]
     squaresCopy[square] = nextValue
     setSquares(squaresCopy)
-    preserveState(squaresCopy)
 
     // 🐨 make a copy of the squares array
     // 💰 `[...squares]` will do it!)
@@ -62,8 +75,7 @@ function Board() {
   function restart() {
     // 🐨 reset the squares
     // 💰 `Array(9).fill(null)` will do it!
-    setSquares(squaresInitialState)
-    preserveState(squaresInitialState)
+    resetSquares()
   }
 
   function renderSquare(i) {
