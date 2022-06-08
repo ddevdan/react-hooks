@@ -2,41 +2,59 @@
 // http://localhost:3000/isolated/exercise/04.js
 
 import * as React from 'react'
+import {useLocalStorageState} from '../utils'
 
-const useLocalStorageState = () => {
+// const useLocalStorageState = () => {
+//   const squaresInitialState = () => Array(9).fill(null)
+//   const initalState = () => {
+//     const storageValue = window.localStorage.getItem('squaresInitialState')
+//     const isUndefined = storageValue === 'undefined'
+//     return (!isUndefined && JSON.parse(storageValue)) || squaresInitialState()
+//   }
+
+//   const resetSquares = () => {
+//     setSquares(squaresInitialState)
+//   }
+
+//   const [squares, setSquares] = React.useState(initalState)
+//   const winner = calculateWinner(squares)
+//   const nextValue = calculateNextValue(squares)
+//   const status = calculateStatus(winner, squares, nextValue)
+
+//   const preserveState = squaresState => {
+//     window.localStorage.setItem(
+//       'squaresInitialState',
+//       JSON.stringify(squaresState),
+//     )
+//   }
+
+//   React.useEffect(() => {
+//     preserveState(squares)
+//   }, [squares])
+
+//   return {squares, setSquares, resetSquares, winner, nextValue, status}
+// }
+function Board() {
+  // 🐨 squares is the state for this component. Add useState for squares
   const squaresInitialState = () => Array(9).fill(null)
-  const initalState = () => {
-    const storageValue = window.localStorage.getItem('squaresInitialState')
-    const isUndefined = storageValue === 'undefined'
-    return (!isUndefined && JSON.parse(storageValue)) || squaresInitialState()
-  }
+  const historySquaresInitialState = () => [Array(9).fill(null)]
+  const [squares, setSquares] = useLocalStorageState(
+    'tic-tac-toe-initial-state',
+    squaresInitialState,
+  )
 
-  const resetSquares = () => {
-    setSquares(squaresInitialState)
-  }
+  const [history, setHistory] = useLocalStorageState(
+    'tic-tac-toe-initial-history',
+    historySquaresInitialState,
+  )
 
-  const [squares, setSquares] = React.useState(initalState)
+  const [currentHistory, setCurrentHistory] = React.useState(0)
+  const lastHistoryIndex = history.length - 1
+  const isLastHistoryPosition = currentHistory === lastHistoryIndex
+
   const winner = calculateWinner(squares)
   const nextValue = calculateNextValue(squares)
   const status = calculateStatus(winner, squares, nextValue)
-
-  const preserveState = squaresState => {
-    window.localStorage.setItem(
-      'squaresInitialState',
-      JSON.stringify(squaresState),
-    )
-  }
-
-  React.useEffect(() => {
-    preserveState(squares)
-  }, [squares])
-
-  return {squares, setSquares, resetSquares, winner, nextValue, status}
-}
-function Board() {
-  // 🐨 squares is the state for this component. Add useState for squares
-  const {squares, setSquares, resetSquares, winner, nextValue, status} =
-    useLocalStorageState()
 
   // 🐨 We'll need the following bits of derived state:
   // - nextValue ('X' or 'O')
@@ -58,10 +76,22 @@ function Board() {
     // 🦉 It's typically a bad idea to mutate or directly change state in React.
     // Doing so can lead to subtle bugs that can easily slip into production.
     //
-
+    setCurrentHistory(prev => prev + 1)
     const squaresCopy = [...squares]
     squaresCopy[square] = nextValue
     setSquares(squaresCopy)
+
+    if (isLastHistoryPosition) {
+      setHistory(prev => {
+        console.log('isLastHistoryPosition', [...prev, squaresCopy])
+        return [...prev, squaresCopy]
+      })
+    } else
+      setHistory(prev => {
+        return [...prev.slice(0, currentHistory + 1), squaresCopy]
+      })
+
+    console.log({currentHistory, lastHistoryIndex, isLastHistoryPosition})
 
     // 🐨 make a copy of the squares array
     // 💰 `[...squares]` will do it!)
@@ -72,10 +102,17 @@ function Board() {
     // 🐨 set the squares to your copy
   }
 
+  const selectCurrentHistory = square => {
+    setCurrentHistory(square)
+    const squaresCopy = [...history[square]]
+    setSquares(squaresCopy)
+  }
+
   function restart() {
     // 🐨 reset the squares
     // 💰 `Array(9).fill(null)` will do it!
-    resetSquares()
+    setSquares(() => squaresInitialState())
+    setHistory(() => historySquaresInitialState())
   }
 
   function renderSquare(i) {
@@ -108,6 +145,24 @@ function Board() {
       <button className="restart" onClick={restart}>
         restart
       </button>
+
+      <ol>
+        {history.map((item, index) => {
+          const isSelected = currentHistory === index
+          return (
+            <li key={index}>
+              <button
+                value={index}
+                disabled={isSelected}
+                onClick={() => selectCurrentHistory(index)}
+              >
+                {index ? `Go to move #${index}` : 'Go to game start'}{' '}
+                {isSelected && '(current)'}
+              </button>
+            </li>
+          )
+        })}
+      </ol>
     </div>
   )
 }
