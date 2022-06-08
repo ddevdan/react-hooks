@@ -6,7 +6,13 @@ import * as React from 'react'
 function Board() {
   // 🐨 squares is the state for this component. Add useState for squares
   const squaresInitialState = () => Array(9).fill(null)
-  const [squares, setSquares] = React.useState(squaresInitialState)
+
+  const initalState = () => {
+    const storageValue = window.localStorage.getItem('squaresInitialState')
+    const isUndefined = storageValue === 'undefined'
+    return (!isUndefined && JSON.parse(storageValue)) || squaresInitialState()
+  }
+  const [squares, setSquares] = React.useState(initalState)
 
   const winner = calculateWinner(squares)
   const nextValue = calculateNextValue(squares)
@@ -21,6 +27,13 @@ function Board() {
 
   // This is the function your square click handler will call. `square` should
   // be an index. So if they click the center square, this will be `4`.
+  function preserveState(squaresState) {
+    window.localStorage.setItem(
+      'squaresInitialState',
+      JSON.stringify(squaresState),
+    )
+  }
+
   function selectSquare(square) {
     const wasSelected = squares[square]
     if (winner || wasSelected) return
@@ -35,6 +48,7 @@ function Board() {
     const squaresCopy = [...squares]
     squaresCopy[square] = nextValue
     setSquares(squaresCopy)
+    preserveState(squaresCopy)
 
     // 🐨 make a copy of the squares array
     // 💰 `[...squares]` will do it!)
@@ -49,6 +63,7 @@ function Board() {
     // 🐨 reset the squares
     // 💰 `Array(9).fill(null)` will do it!
     setSquares(squaresInitialState)
+    preserveState(squaresInitialState)
   }
 
   function renderSquare(i) {
