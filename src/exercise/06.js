@@ -25,11 +25,10 @@ function PokemonInfo({pokemonName}) {
       setPokemon(null)
       setError(null)
       console.log('mudou o nome', pokemonName)
-      fetchPokemon(pokemonName)
-        .then(response => {
-          setPokemon(response)
-        })
-        .catch(err => setError(err))
+      fetchPokemon(pokemonName).then(
+        pokemon => setPokemon(pokemon),
+        error => setError(error),
+      )
     }
 
     return () => {
