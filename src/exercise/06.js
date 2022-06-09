@@ -14,6 +14,22 @@ import {
   PokemonDataView,
 } from '../pokemon'
 
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = {hasError: false}
+  }
+
+  render() {
+    if (this.props.hasError) {
+      // You can render any custom fallback UI
+      return <h1>Something went wrong.</h1>
+    }
+
+    return this.props.children
+  }
+}
+
 function PokemonInfo({pokemonName}) {
   // 🐨 Have state for the pokemon (null)
   const hasPokemonName = Boolean(pokemonName.length)
@@ -58,19 +74,15 @@ function PokemonInfo({pokemonName}) {
   // 🐨 return the following things based on the `pokemon` state and `pokemonName` prop:
   //   1. no pokemonName: 'Submit a pokemon'
 
-  if (state.status === 'rejected')
-    return (
-      <div role="alert">
-        There was an error:{' '}
-        <pre style={{whiteSpace: 'normal'}}>{state.error.message}</pre>
-      </div>
-    )
-  if (state.status === 'resolved')
-    return <PokemonDataView pokemon={state.pokemon} />
-  if (state.status === 'pending')
-    return <PokemonInfoFallback name={pokemonName} />
-
-  return <div>Submit a pokemon</div>
+  return (
+    <ErrorBoundary hasError={state.status === 'rejected'}>
+      {state.status === 'resolved' && (
+        <PokemonDataView pokemon={state.pokemon} />
+      )}
+      {state.status === 'idle' && <div>Submit a pokemon</div>}
+      {state.status === 'pending' && <PokemonInfoFallback name={pokemonName} />}
+    </ErrorBoundary>
+  )
 
   //   2. pokemonName but no pokemon: <PokemonInfoFallback name={pokemonName} />
   //   3. pokemon: <PokemonDataView pokemon={pokemon} />
