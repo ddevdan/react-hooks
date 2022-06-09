@@ -19,15 +19,22 @@ function PokemonInfo({pokemonName}) {
   const hasPokemonName = Boolean(pokemonName.length)
   const [pokemon, setPokemon] = React.useState(() => null)
   const [error, setError] = React.useState(() => null)
+  const [status, setStatus] = React.useState(() => 'idle')
 
   React.useEffect(() => {
     if (hasPokemonName) {
       setPokemon(null)
-      setError(null)
+      setStatus('pending')
       console.log('mudou o nome', pokemonName)
       fetchPokemon(pokemonName).then(
-        pokemon => setPokemon(pokemon),
-        error => setError(error),
+        pokemon => {
+          setPokemon(pokemon)
+          setStatus('resolved')
+        },
+        error => {
+          setError(error)
+          setStatus('rejected')
+        },
       )
     }
 
@@ -49,15 +56,15 @@ function PokemonInfo({pokemonName}) {
   // 🐨 return the following things based on the `pokemon` state and `pokemonName` prop:
   //   1. no pokemonName: 'Submit a pokemon'
 
-  if (error)
+  if (status === 'rejected')
     return (
       <div role="alert">
         There was an error:{' '}
         <pre style={{whiteSpace: 'normal'}}>{error.message}</pre>
       </div>
     )
-  if (pokemon) return <PokemonDataView pokemon={pokemon} />
-  if (hasPokemonName) return <PokemonInfoFallback name={pokemonName} />
+  if (status === 'resolved') return <PokemonDataView pokemon={pokemon} />
+  if (status === 'pending') return <PokemonInfoFallback name={pokemonName} />
 
   return <div>Submit a pokemon</div>
 
