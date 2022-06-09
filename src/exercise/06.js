@@ -17,29 +17,31 @@ import {
 function PokemonInfo({pokemonName}) {
   // 🐨 Have state for the pokemon (null)
   const hasPokemonName = Boolean(pokemonName.length)
-  const [pokemon, setPokemon] = React.useState(() => null)
-  const [error, setError] = React.useState(() => null)
-  const [status, setStatus] = React.useState(() => 'idle')
+  // const [pokemon, setPokemon] = React.useState(() => null)
+  // const [error, setError] = React.useState(() => null)
+  // const [status, setStatus] = React.useState(() => 'idle')
+  const [state, setState] = React.useState({
+    status: 'idle',
+    pokemon: null,
+    error: null,
+  })
 
   React.useEffect(() => {
     if (hasPokemonName) {
-      setPokemon(null)
-      setStatus('pending')
+      setState({pokemon: null, status: 'pending', error: null})
       console.log('mudou o nome', pokemonName)
       fetchPokemon(pokemonName).then(
         pokemon => {
-          setPokemon(pokemon)
-          setStatus('resolved')
+          setState({pokemon, status: 'resolved', error: null})
         },
         error => {
-          setError(error)
-          setStatus('rejected')
+          setState({pokemon: null, status: 'rejected', error})
         },
       )
     }
 
     return () => {
-      setPokemon(null)
+      setState({pokemon: null, status: 'idle', error: null})
     }
   }, [hasPokemonName, pokemonName])
 
@@ -56,15 +58,17 @@ function PokemonInfo({pokemonName}) {
   // 🐨 return the following things based on the `pokemon` state and `pokemonName` prop:
   //   1. no pokemonName: 'Submit a pokemon'
 
-  if (status === 'rejected')
+  if (state.status === 'rejected')
     return (
       <div role="alert">
         There was an error:{' '}
-        <pre style={{whiteSpace: 'normal'}}>{error.message}</pre>
+        <pre style={{whiteSpace: 'normal'}}>{state.error.message}</pre>
       </div>
     )
-  if (status === 'resolved') return <PokemonDataView pokemon={pokemon} />
-  if (status === 'pending') return <PokemonInfoFallback name={pokemonName} />
+  if (state.status === 'resolved')
+    return <PokemonDataView pokemon={state.pokemon} />
+  if (state.status === 'pending')
+    return <PokemonInfoFallback name={pokemonName} />
 
   return <div>Submit a pokemon</div>
 
